@@ -21,11 +21,10 @@ Enable it via the RuboCop plugin API (RuboCop 1.72+). In your `.rubocop.yml`:
 ```yml
 plugins:
   - rubocop-mick
-
-inherit_gem:
-  rubocop-mick: config/default.yml
 ```
 
+That's all — the gem ships its cops' defaults (each `Enabled: true`), so
+listing it under `plugins:` activates them; no `inherit_gem:` line is needed.
 On older RuboCop, use `require: rubocop-mick` instead of the `plugins:` key. Run
 `bundle exec rubocop` as usual — the cops below are now active.
 
