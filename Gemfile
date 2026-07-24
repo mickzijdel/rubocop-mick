@@ -7,3 +7,7 @@ gemspec
 gem "rake", "~> 13.0"
 gem "rspec", "~> 3.13"
 gem "rubocop-rails-omakase", require: false
+
+# dev-env audit tools (dead code + Ruby structural duplication)
+gem "debride", require: false
+gem "flay", require: false

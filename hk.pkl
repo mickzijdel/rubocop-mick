@@ -1,0 +1,71 @@
+// dev-env standard (dev-hooks:dev-env-setup) — version tracked via DEV_ENV_VERSION in mise.toml.
+// Adapted from the Ruby template for a *gem* (not a Rails app): rubocop/rspec via `bundle exec`
+// (no bin/ binstubs), audits scoped to lib/, and the Rails-only steps (herb, brakeman,
+// importmap-audit, fasterer, database_consistency, bin/rails test) dropped as inapplicable.
+amends "package://github.com/jdx/hk/releases/download/v1.46.0/hk@1.46.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.46.0/hk@1.46.0#/Builtins.pkl"
+
+local linters = new Mapping<String, Step> {
+    ["rubocop"] {
+        glob = "**/*.rb"
+        check = "bundle exec rubocop"
+        fix = "bundle exec rubocop -A"
+    }
+    ["test"] {
+        glob = "**/*.rb"
+        check = "bundle exec rspec"
+    }
+    // Shipped scripts (scripts/*, bin/*) must carry the executable bit IN THE GIT INDEX
+    // (mode 100755): with core.fileMode=false a local chmod +x never reaches git, so clones get
+    // a script that dies with exit 126. Detects scripts by shebang (line 1) among 100644 entries.
+    // Single awk on purpose: hk's internal `sh` chokes on a while/read loop inside $().
+    ["exec-bit-scripts"] {
+        check = "bad=$(git ls-files -s | awk -F'\\t' '$1 ~ /^100644/ { if ((getline line < $2) > 0 && line ~ /^#!/) print $2; close($2) }'); if [ -n \"$bad\" ]; then echo 'Shebang scripts missing the executable bit in the git index. Fix: git update-index --chmod=+x <file>'; echo \"$bad\"; exit 1; fi"
+    }
+    // --- Audits (dead-code + duplication) ---------------------------------------
+    // debride (dead methods) + flay (Ruby structural duplication, advisory) run locally via
+    // `bundle exec`; jscpd (token-based, the enforcing gate) runs via npx and reads `.jscpd.json`.
+    // Scoped to lib/ (the gem's only source dir). The debride whitelist covers framework
+    // callbacks (on_send, about, rules, …) that RuboCop/lint_roller call from outside the gem.
+    ["debride"] {
+        glob = "**/*.rb"
+        check = "bundle exec debride --whitelist .debride_whitelist lib"
+    }
+    ["flay"] {
+        glob = "**/*.rb"
+        check = "bundle exec flay lib"
+    }
+    ["jscpd"] {
+        glob = "**/*.rb"
+        check = "bash scripts/run-jscpd.sh ruby"
+    }
+    // --- GitHub Actions checks --------------------------------------------------
+    // actionlint = schema/expression/`needs:` correctness (its shellcheck-of-run: pass off — see
+    // the Ruby template note); zizmor = workflow security. Both hk builtins, glob-gated to
+    // workflow files. Need `actionlint` + `zizmor` from mise (mise.toml).
+    ["actionlint"] = (Builtins.actionlint) {
+        check = "actionlint -shellcheck= {{ files }}"
+    }
+    ["zizmor"] = Builtins.zizmor
+    // Secret scanning (defense-in-depth). hk builtin.
+    ["gitleaks"] = Builtins.gitleaks
+    // Block accidentally-committed large files. hk builtin.
+    ["check-added-large-files"] = Builtins.check_added_large_files
+}
+
+hooks {
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps = linters
+    }
+    ["fix"] {
+        fix = true
+        steps = linters
+    }
+    // `check` is the full suite CI runs. The audits already live in `linters`, so they run on
+    // pre-commit too; `check` is the same set under one name.
+    ["check"] {
+        steps = linters
+    }
+}

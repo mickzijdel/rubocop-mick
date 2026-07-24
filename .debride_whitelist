@@ -1,0 +1,8 @@
+# Framework callbacks invoked by RuboCop / lint_roller, not from within this gem —
+# debride can't see the external caller, so it reports them as dead. Whitelist them.
+MSG
+on_send
+on_csend
+about
+supported?
+rules
