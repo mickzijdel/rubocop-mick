@@ -1,0 +1,6 @@
+Mick/ParamsMutation:
+  Description: 'Do not mutate the request `params` object; build a separate hash instead.'
+  Enabled: true
+  VersionAdded: '0.1'
+  Include:
+    - 'app/controllers/**/*.rb'
