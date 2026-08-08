@@ -52,6 +52,20 @@ jobs:
       - name: Run specs
         run: bundle exec rspec
 
+  # A toolchain or service version is pinned in several files at once (mise.toml, the
+  # .<lang>-version files, the Dockerfile ARGs, and the compose/deploy `image:` tags) because
+  # different consumers read different ones, and nothing makes them agree — a bump that misses
+  # one file is silent. Mirrors the hk `versions` step so the gates can't drift. Reads files
+  # only, so it needs no toolchain: the cheapest job in this workflow.
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Toolchain and service versions agree across files
+        run: bash scripts/check_version_sync.sh
+
   # MIT-licensed gitleaks CLI via mise (not gitleaks/gitleaks-action, which needs a paid license
   # on org repos) — the same scan the local hk pre-commit hook runs.
   gitleaks:
