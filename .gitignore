@@ -5,3 +5,4 @@
 *.gem
 Gemfile.lock
 /.worktrees/
+/.claude/worktrees/
