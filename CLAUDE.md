@@ -50,7 +50,7 @@ pinned via mise + `mise.lock`, pre-commit checks via `hk` mirrored in CI (`.gith
 | Package | Version | Source |
 |---------|---------|--------|
 | Ruby | 4.0.2 | `.ruby-version` |
-| rubocop | `>= 1.72` (dev: 1.88.2) | gemspec / `Gemfile.lock` |
+| rubocop | `>= 1.72` (dev: 1.92.1) | gemspec / `Gemfile.lock` |
 | lint_roller | `~> 1.1` | gemspec |
 | rspec | `~> 3.13` | Gemfile |
 | rubocop-rails-omakase | latest (dev-only, self-lint) | Gemfile |
